@@ -12,6 +12,7 @@ import 'primevue/resources/primevue.min.css';
 import 'primeicons/primeicons.css';
 import './style.css';
 import App from './App.vue';
+import FloatLabel from 'primevue/floatlabel';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -24,5 +25,6 @@ app.component('Button', Button);
 app.component('InputText', InputText);
 app.component('Dropdown', Dropdown);
 app.component('Password', Password);
+app.component('FloatLabel', FloatLabel);
 
 app.mount('#app');

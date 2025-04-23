@@ -13,6 +13,8 @@ const accountTypes = ref([
 
 const accounts = computed(() => store.accounts);
 
+const touchedFields = ref(new Set<string>());
+
 const useValidation = () => {
   const validateAccount = (account: Account) => {
     const errors = new Set<string>();
@@ -35,9 +37,19 @@ const useValidation = () => {
 const { validateAccount } = useValidation();
 
 const handleInputBlur = (account: Account, field: keyof Account) => {
+  touchedFields.value.add(`${account.id}-${field}`);
+  
   if (field === 'labelInput') {
     account.label = parseLabels(account.labelInput || '');
   }
+  
+  if (touchedFields.value.has(`${account.id}-${field}`)) {
+    const errors = validateAccount(account);
+    if (errors.has('login')) {
+      return;
+    }
+  }
+  
   store.updateAccount(account);
 };
 
@@ -47,6 +59,9 @@ const handleAccountTypeChange = (account: Account) => {
 };
 
 const isFieldInvalid = (account: Account, field: string) => {
+  if (!touchedFields.value.has(`${account.id}-${field}`)) {
+    return false;
+  }
   return validateAccount(account).has(field);
 };
 </script>
@@ -74,17 +89,18 @@ const isFieldInvalid = (account: Account, field: string) => {
             <th>Действия</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody v-if="accounts?.length">
           <tr v-for="account in accounts" :key="account.id">
             <td>
-              <InputText
-                  :value="account.labelInput ?? getLabelsAsString(account.label)"
-                  maxlength="50"
-                  placeholder="Введите метки"
-                  @blur="handleInputBlur(account, 'labelInput')"
-                  @input="account.labelInput = ($event.target as HTMLInputElement).value"
-                  class="label-input"
-              />
+              <FloatLabel>
+                <InputText
+                    :value="account.labelInput ?? getLabelsAsString(account.label)"
+                    maxlength="50"
+                    @blur="handleInputBlur(account, 'labelInput')"
+                    class="label-input"
+                />
+                <label>Введите метки</label>
+              </FloatLabel>
             </td>
             <td>
               <Dropdown
@@ -97,26 +113,29 @@ const isFieldInvalid = (account: Account, field: string) => {
               />
             </td>
             <td>
-              <InputText
-                v-model="account.login"
-                maxlength="100"
-                placeholder="Введите логин"
-                :class="{ 'invalid': isFieldInvalid(account, 'login') }"
-                @blur="handleInputBlur(account, 'login')"
-                class="login-input"
-              />
+              <FloatLabel>
+                <InputText
+                  v-model="account.login"
+                  maxlength="100"
+                  :class="{ 'invalid': isFieldInvalid(account, 'login') }"
+                  @blur="handleInputBlur(account, 'login')"
+                  class="login-input"
+                />
+                <label>Введите логин</label>
+              </FloatLabel>
             </td>
             <td>
-              <Password
-                v-if="account.accountType === 'Local'"
-                v-model="account.password"
-                maxlength="100"
-                placeholder="Введите пароль"
-                :class="{ 'invalid': isFieldInvalid(account, 'password') }"
-                @blur="handleInputBlur(account, 'password')"
-                toggleMask
-                class="password-input"
-              />
+              <FloatLabel v-if="account.accountType === 'Local'">
+                <Password
+                  v-model="account.password"
+                  maxlength="100"
+                  :class="{ 'invalid': isFieldInvalid(account, 'password') }"
+                  @blur="handleInputBlur(account, 'password')"
+                  toggleMask
+                  class="password-input"
+                />
+                <label>Введите пароль</label>
+              </FloatLabel>
               <span v-else class="disabled-field">Не требуется</span>
             </td>
             <td>
@@ -128,6 +147,13 @@ const isFieldInvalid = (account: Account, field: string) => {
                 @click="store.deleteAccount(account.id)"
                 class="delete-btn"
               />
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-else>
+          <tr>
+            <td colspan="5" class="empty-message">
+              Список учетных записей пуст
             </td>
           </tr>
         </tbody>
@@ -177,7 +203,8 @@ th {
 }
 
 td {
-  padding: 0.75rem 1rem;
+  color: var(--text-color);
+  padding: 1rem;
   border-bottom: 1px solid var(--surface-border);
 }
 
@@ -204,6 +231,13 @@ tr:last-child td {
   min-width: 200px;
 }
 
+.empty-message {
+  text-align: center;
+  color: var(--text-color-secondary);
+  font-style: italic;
+  padding: 2rem !important;
+}
+
 @media (max-width: 768px) {
   .account-manager {
     padding: 1rem;
@@ -221,7 +255,7 @@ tr:last-child td {
   
   td {
     display: block;
-    padding: 0.5rem 1rem;
+    padding: 1rem;
     
     &:before {
       content: attr(data-label);
@@ -230,11 +264,33 @@ tr:last-child td {
       margin-bottom: 0.5rem;
     }
   }
+
+  tr:last-child {
+    border-bottom: none;
+  }
   
   tr {
     display: block;
     margin-bottom: 1rem;
     border-bottom: 2px solid var(--surface-border);
   }
+}
+
+:deep(.p-float-label) {
+  width: 100%;
+}
+
+:deep(.p-float-label input:focus) ~ label,
+:deep(.p-float-label input.p-filled) ~ label,
+:deep(.p-float-label textarea:focus) ~ label,
+:deep(.p-float-label textarea.p-filled) ~ label,
+:deep(.p-float-label .p-inputwrapper-focus) ~ label,
+:deep(.p-float-label .p-inputwrapper-filled) ~ label {
+  color: var(--primary-color);
+}
+
+:deep(.p-float-label input.invalid:focus) ~ label,
+:deep(.p-float-label input.invalid.p-filled) ~ label {
+  color: var(--red-500);
 }
 </style>
