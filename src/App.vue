@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import AccountForm from './components/AccountForm.vue';
 </script>
 
 <template>
-  <div />
+  <AccountForm />
 </template>

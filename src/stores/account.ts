@@ -30,5 +30,21 @@ export const useAccountStore = defineStore('account', {
       };
       this.accounts.push(newAccount);
     },
+
+    updateAccount(account: Account) {
+      const index = this.accounts.findIndex(a => a.id === account.id);
+      if (index !== -1) {
+        this.accounts[index] = account;
+      }
+    },
+    parseLabels(labelString: string): Label[] {
+      if (!labelString.trim()) return [];
+      return labelString.split(';')
+        .map(text => text.trim())
+        .filter(text => text)
+        .map(text => ({ text }));
+    }
   },
+
+  persist: true
 });
