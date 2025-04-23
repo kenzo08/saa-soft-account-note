@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-interface Label {
+export interface Label {
   text: string;
 }
 
@@ -17,6 +17,20 @@ export const useAccountStore = defineStore('account', {
   state: () => ({
     accounts: [] as Account[]
   }),
+  
+  getters: {
+    getAccountById: (state) => {
+      return (id: string) => state.accounts.find(account => account.id === id);
+    },
+    
+    getLocalAccounts: (state) => {
+      return state.accounts.filter(account => account.accountType === 'Local');
+    },
+    
+    getLdapAccounts: (state) => {
+      return state.accounts.filter(account => account.accountType === 'LDAP');
+    }
+  },
   
   actions: {
     addAccount() {
@@ -37,12 +51,12 @@ export const useAccountStore = defineStore('account', {
         this.accounts[index] = account;
       }
     },
-    parseLabels(labelString: string): Label[] {
-      if (!labelString.trim()) return [];
-      return labelString.split(';')
-        .map(text => text.trim())
-        .filter(text => text)
-        .map(text => ({ text }));
+
+    deleteAccount(id: string) {
+      const index = this.accounts.findIndex(a => a.id === id);
+      if (index !== -1) {
+        this.accounts.splice(index, 1);
+      }
     }
   },
 
