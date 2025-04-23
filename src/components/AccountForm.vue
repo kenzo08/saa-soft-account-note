@@ -78,12 +78,12 @@ const isFieldInvalid = (account: Account, field: string) => {
           <tr v-for="account in accounts" :key="account.id">
             <td>
               <InputText
-                v-model="account.labelInput"
-                :modelValue="getLabelsAsString(account.label)"
-                maxlength="50"
-                placeholder="Введите метки"
-                @blur="handleInputBlur(account, 'labelInput')"
-                class="label-input"
+                  :value="account.labelInput ?? getLabelsAsString(account.label)"
+                  maxlength="50"
+                  placeholder="Введите метки"
+                  @blur="handleInputBlur(account, 'labelInput')"
+                  @input="account.labelInput = ($event.target as HTMLInputElement).value"
+                  class="label-input"
               />
             </td>
             <td>
